@@ -1,4 +1,4 @@
-require "bai2/version"
+require 'bai2/version'
 
 module Bai2
   # Your code goes here...
