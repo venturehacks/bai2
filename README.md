@@ -19,3 +19,17 @@ Therefore, during the afternoon job, we will use the information to create `Wire
 
 ## API
 
+I think this gem should probably implement an active record object called `Bai2::BaiFile` (or some-such) that we can pass a `File` object to and which will then save and parse the BAI2 file text, perform some check-sums, and expose all the data as properties.
+
+Example usage:
+
+```
+```
+
+## References
+
+I was able to find one gem that parses BAI files. However, it has no tests and does not seem to check the various checksums that are available in the actual BAI format. You can start with that or just build this yourself:
+
+[bai_parser](https://github.com/sanjp/bai_parser)
+
+[bai_parser.rb (the interesting code)](https://github.com/sanjp/bai_parser/blob/master/lib%2Fbai_parser.rb)
