@@ -29,14 +29,14 @@ bai_file = Bai2::BaiFile.create(downloaded_file)
 
 if bai_file.valid?
 
-  # Should have constants defined for this like Bai2::OPENING_LEDGER. We can use this to distinguish
-  # the morning and end-of-day files described above.
+  # Should have constants defined for this like Bai2::OPENING_LEDGER. We can use this
+  # to distinguish the morning and end-of-day files described above.
   bai_file.type 
 
   FboAccountBalance.set_balance(bai_file.account_balance)
   
-  # We may need to loop through bai_file.groups here as well; I only have very basic sample BAI files
-  # right now, though, so I'm not sure how our bank will use groups.
+  # We may need to loop through bai_file.groups here as well; I only have very basic
+  # sample BAI files right now, though, so I'm not sure how our bank will use groups.
 
   bai_file.incoming_wires.each do |wire_info|
     wire_info.amount
@@ -52,8 +52,8 @@ if bai_file.valid?
     wire.complete!
   end
   
-  # For this, we need to get more details from the bank to find out how they will represent
-  # incoming ACH Debits
+  # For this, we need to get more details from the bank to find out how they will
+  # represent incoming ACH Debits
   if bai_file.incoming_ach_debit_amount == AchPull.sent.sum(&:amount)
     AchPull.each(&:provision!)
   end
