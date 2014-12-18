@@ -9,7 +9,7 @@ This gem parses BAI2 files that we receive from a bank.
 
 The BAI2 file format is used by banks to provide batched updates about transactions in an account. [Wikipedia has an overview](https://en.wikipedia.org/wiki/BAI_(file_format)).
 
-I have a PDF from Chase bank as well, which I will add to this repository.
+The documentation that we have is in `/docs`.
 
 ### When do we need it?
 
