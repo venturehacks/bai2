@@ -23,7 +23,49 @@ I think this gem should probably implement an active record object called `Bai2:
 
 Example usage:
 
-```
+```ruby
+bai_file = Bai2::BaiFile.create(downloaded_file)
+
+
+if bai_file.valid?
+
+  # Should have constants defined for this like Bai2::OPENING_LEDGER. We can use this to distinguish
+  # the morning and end-of-day files described above.
+  bai_file.type 
+
+  FboAccountBalance.set_balance(bai_file.account_balance)
+  
+  # We may need to loop through bai_file.groups here as well; I only have very basic sample BAI files
+  # right now, though, so I'm not sure how our bank will use groups.
+
+  bai_file.incoming_wires.each do |wire_info|
+    wire_info.amount
+    wire_info.id
+    wire_info.details # string
+    # etc.
+  end
+  
+  bai_file.outgoing_wire.each do |wire_info|
+    wire = OutgoingWire.find_by_id_number(wire_info.id)
+    report_not_found unless wire
+    report_error unless wire.amount == wire_info.amount
+    wire.complete!
+  end
+  
+  # For this, we need to get more details from the bank to find out how they will represent
+  # incoming ACH Debits
+  if bai_file.incoming_ach_debit_amount == AchPull.sent.sum(&:amount)
+    AchPull.each(&:provision!)
+  end
+  
+  bai_file.outgoing_ach_credit_amount # do something similar
+  
+  bai_file.incoming_ach_credits.each do |ach_info|
+    # create an IncomingAchCredit object
+  end
+else
+  # report the error we can investigate
+end
 ```
 
 ## References
