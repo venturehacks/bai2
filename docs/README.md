@@ -10,3 +10,7 @@ This is a sample file from SVB of the "morning" BAI2 file. We should be able to 
 
 #### EOD_BAI2_wire_info_sample.TXT
 This is the "End-of-Day" BAI2 file that SVB puts together around 5pm. We will not want to get the account balance from this file, but what it does provide is very detailed records on all the incoming or outgoing wires that happened /today/ to this account.
+
+#### External docs
+
+I'm currently reading: http://www.bai.org/Libraries/Site-General-Downloads/Cash_Management_2005.sflb.ashx Looks like this may be the latest official spec?
