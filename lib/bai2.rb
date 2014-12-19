@@ -25,6 +25,7 @@ module Bai2
     #
     def initialize(raw)
       @raw = raw
+      @groups = []
       parse(raw)
     end
 
@@ -237,6 +238,10 @@ module Bai2
     # TODO: write me; finish me
     class Group
 
+      def initialize
+        @accounts = []
+      end
+
       attr_reader :accounts
 
       private
@@ -248,20 +253,62 @@ module Bai2
 
       def parse(n)
 
-        p n.records
-
         unless n.code == :group_header && \
             n.records.map(&:code) == [:group_header, :group_trailer]
           raise BaiFile::ParseError.new('Unexpected record.')
         end
 
-        head, tail = *n.records
-
-        @accounts = n.children.map {|child| Account.new }
+        @accounts = n.children.map {|child| Account.send(:parse, child) }
       end
 
     end
 
-    class Account; end
-  end
+
+    class Account
+
+      def initialize
+        @transactions = []
+      end
+
+      attr_reader :transactions
+
+      private
+      def self.parse(node)
+        self.new.tap do |g|
+          g.send(:parse, node)
+        end
+      end
+
+      def parse(n)
+
+        unless n.code == :account_identifier && \
+            n.records.map(&:code) == [:account_identifier, :account_trailer]
+          raise BaiFile::ParseError.new('Unexpected record.')
+        end
+
+        @transactions = n.children.map {|child| Transaction.parse(child) }
+      end
+
+    end
+
+
+    class Transaction
+
+      def initialize
+      end
+
+      private
+      def self.parse(node)
+        self.new.tap do |g|
+          g.send(:parse, node)
+        end
+      end
+
+      def parse(n)
+        head, tail = *n.records
+      end
+
+    end
+
+  end # BaiFile
 end
