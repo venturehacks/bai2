@@ -7,6 +7,9 @@ module Bai2
   #
   class BaiFile
 
+    # TODO:
+    # - run checksums
+
     # Parse a file on disk:
     #
     #   f = BaiFile.parse('myfile.bai2')
@@ -214,11 +217,51 @@ module Bai2
     # Parses the file_header root tree node, and creates the object hierarchy.
     #
     def parse_file_node(n)
+
+      unless n.code == :file_header && n.records.count == 2 && \
+          n.records.map(&:code) == [:file_header, :file_trailer]
+        raise ParseError.new('Unexpected record.')
+      end
+
+      head, tail = *n.records
+
+      @sender    = head.fields[:sender_identification]
+      @recipient = head.fields[:receiver_identification]
+
+      @groups = n.children.map {|child| Group.send(:parse, child) }
     end
 
 
-  end
+    public
 
-  class Group
+    # TODO: write me; finish me
+    class Group
+
+      attr_reader :accounts
+
+      private
+      def self.parse(node)
+        self.new.tap do |g|
+          g.send(:parse, node)
+        end
+      end
+
+      def parse(n)
+
+        p n.records
+
+        unless n.code == :group_header && \
+            n.records.map(&:code) == [:group_header, :group_trailer]
+          raise BaiFile::ParseError.new('Unexpected record.')
+        end
+
+        head, tail = *n.records
+
+        @accounts = n.children.map {|child| Account.new }
+      end
+
+    end
+
+    class Account; end
   end
 end
