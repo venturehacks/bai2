@@ -25,22 +25,26 @@ module Bai2
       parse(raw)
     end
 
+    # This is the raw data. Probably not super important.
     attr_reader :raw
 
+    # The transmitter and file recipient financial institutions.
+    attr_reader :sender, :recipient
+
+    # The groups contained within this file.
+    attr_reader :groups
+
+
+
+    # =========================================================================
+    # Parsing implementation
+    #
 
     class ParseError < Exception; end
 
     private
 
 
-    RECORD_CODES = {'01' => :file_header,
-                    '02' => :group_header,
-                    '03' => :account_identifier,
-                    '16' => :transaction_detail,
-                    '49' => :account_trailer,
-                    '88' => :continuation,
-                    '98' => :group_trailer,
-                    '99' => :file_trailer }
 
     # Parsing is a two-step process:
     #
@@ -49,52 +53,106 @@ module Bai2
     #
     def parse(data)
 
-      # split records, handle stupid DOS-format files, extract type codes
-      # out: [[code, record], ...]
-      lines = data.split("\n").map(&:chomp).map do |r|
-        [RECORD_CODES[r[0..1]], r]
+      # split records, handle stupid DOS-format files, instantiate records
+      records = data.split("\n").map(&:chomp).map {|l| Record.new(l) }
+
+      # build the tree
+      @root = parse_tree(records)
+
+      # parse the file node; will descend tree and parse children
+      parse_file_node(@root)
+
+    end
+
+
+    # This class represents a record. It knows how to parse the single record
+    # information, but has no knowledge of the structure of the file.
+    #
+    class Record
+
+
+      RECORD_CODES = {'01' => :file_header,
+                      '02' => :group_header,
+                      '03' => :account_identifier,
+                      '16' => :transaction_detail,
+                      '49' => :account_trailer,
+                      '88' => :continuation,
+                      '98' => :group_trailer,
+                      '99' => :file_trailer }
+      FIELDS = {
+        file_header:     %w[record_code sender_identification
+                            receiver_identification file_creation_date
+                            file_creation_time file_identification_number
+                            physical_record_length block_size version_number],
+        group_header:    %w[record_code ultimate_receiver_identification
+                            originator_identification group_status as_of_date
+                            as_of_time currency_code as_of_date_modifier],
+        group_trailer:   %w[record_code group_control_total number_of_accounts
+                            number_of_records],
+        account_trailer: %w[record_code account_control_total number_of_records],
+        file_trailer:    %w[record_code file_control_total number_of_groups
+                            number_of_records],
+      }
+
+
+      def initialize(line)
+        @code = RECORD_CODES[line[0..1]]
+        @raw = line
+        #@fields = parse_raw
       end
 
-      root = parse_tree(lines)
+      attr_reader :code, :raw, :fields
+    end
 
+    # Wrapper object to represent a tree node.
+    #
+    class ParseNode
+
+      def initialize(record)
+        @code, @records = record.code, [record]
+        @children = []
+      end
+      attr_reader :code
+      attr_accessor :records, :children
+
+
+      def push_record(record)
+        self
+      end
+
+      private
+      def parse_record(record)
+      end
     end
 
 
     # Builds the tree of nodes
     #
-    # lines: an array of lines
-    #
-    #   [ [record_type, line],
-    #     [:group_header, '...'],
-    #     [...], ...]
-    #
-    # returns: a tree of nodes
-    #
-    def parse_tree(lines)
+    def parse_tree(records)
 
       # build tree, should return a file_header node
-      first, *lines = *lines
-      unless first[0] == :file_header
+      first, *records = *records
+      unless first.code == :file_header
         raise ParseError.new('Expecting file header record (01).')
       end
-      root = ParseNode.new(*first)
+      root = ParseNode.new(first)
       stack = [root]
 
-      lines.each do |type, line|
+      records.each do |record|
         raise ParseError.new('Unexpected record.') if stack.empty?
 
-        case type
+        case record.code
 
           # handling headers
         when :group_header, :account_identifier
 
           parent = {group_header:       :file_header,
-                    account_identifier: :group_header}[type]
-          unless stack.last.type == parent
-            raise ParseError.new("Parsing #{type}, expecting #{parent} parent.")
+                    account_identifier: :group_header}[record.code]
+          unless stack.last.code == parent
+            raise ParseError.new("Parsing #{record.code}, expecting #{parent} parent.")
           end
 
-          n = ParseNode.new(type, line)
+          n = ParseNode.new(record)
           stack.last.children << n
           stack << n
 
@@ -103,33 +161,33 @@ module Bai2
 
           parent = {account_trailer: :account_identifier,
                     group_trailer:   :group_header,
-                    file_trailer:    :file_header}[type]
-          unless stack.last.type == parent
-            raise ParseError.new("Parsing #{type}, expecting #{parent} parent.")
+                    file_trailer:    :file_header}[record.code]
+          unless stack.last.code == parent
+            raise ParseError.new("Parsing #{record.code}, expecting #{parent} parent.")
           end
 
-          stack.last.records << line
+          stack.last.records << record
           stack.pop
 
           # handling continuations
         when :continuation
 
           n = (stack.last.children.last || stack.last)
-          n.records << line
+          n.records << record
 
           # handling transactions
         when :transaction_detail
 
-          unless stack.last.type == :account_identifier
-            raise ParseError.new("Parsing #{type}, expecting account_identifier parent.")
+          unless stack.last.code == :account_identifier
+            raise ParseError.new("Parsing #{record.code}, expecting account_identifier parent.")
           end
 
-          stack.last.children << ParseNode.new(type, line)
+          stack.last.children << ParseNode.new(record)
 
           # handling special known errors
         else # nil
           binding.pry
-          raise ParseError.new('Unknown or unexpected record type.')
+          raise ParseError.new('Unknown or unexpected record code.')
         end
       end
 
@@ -141,18 +199,14 @@ module Bai2
       root
     end
 
-
-    # Wrapper object to represent a tree node.
+    # Parses the file_header root tree node, and creates the object hierarchy.
     #
-    class ParseNode
-
-      def initialize(type, record)
-        @type, @records = type, [record]
-        @children = []
-      end
-      attr_reader :type
-      attr_accessor :records, :children
+    def parse_file_node(n)
     end
+
+
   end
 
+  class Group
+  end
 end
