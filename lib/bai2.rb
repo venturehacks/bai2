@@ -98,10 +98,22 @@ module Bai2
       def initialize(line)
         @code = RECORD_CODES[line[0..1]]
         @raw = line
-        #@fields = parse_raw
+        @fields = parse_raw(code, line)
       end
 
       attr_reader :code, :raw, :fields
+
+
+      private
+
+      def parse_raw(code, line)
+        fields = (FIELDS[code] || []).map(&:to_sym)
+        # TODO: raise ParseError
+        return if fields.empty?
+        # clean / delimiter
+        clean = line.sub(/,\/.+$/, '').sub(/\/$/, '')
+        Hash[fields.zip(clean.split(',', fields.count))]
+      end
     end
 
     # Wrapper object to represent a tree node.
