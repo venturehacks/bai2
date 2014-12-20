@@ -61,6 +61,9 @@ module Bai2
       # split records, handle stupid DOS-format files, instantiate records
       records = data.split("\n").map(&:chomp).map {|l| Record.new(l) }
 
+      # merge continuations
+      records = merge_continuations(records)
+
       # build the tree
       @root = parse_tree(records)
 
@@ -89,6 +92,26 @@ module Bai2
       private
       def parse_record(record)
       end
+    end
+
+
+    # Merges continuations
+    #
+    def merge_continuations(records)
+      merged = []
+      records.each do |record|
+        unless record.code == :continuation
+          merged << record
+        else
+          last = merged.pop
+          # NOTE: hacky, shouldn't be relying on a Record implementation detail.
+          last_field = (Record::SIMPLE_FIELD_MAP[last.code] || []).last
+          prefix = (last_field == 'text') ? "\n" : ','
+          new_record = Record.new(last.raw + prefix + record.fields[:continuation])
+          merged << new_record
+        end
+      end
+      merged
     end
 
 
@@ -260,13 +283,12 @@ module Bai2
       def parse(n)
         head, *rest = *n.records
 
-        unless head.code == :transaction_detail && \
-            rest.all? {|t| t.code == :continuation }
+        unless head.code == :transaction_detail && rest.empty?
           raise BaiFile::ParseError.new('Unexpected record.')
         end
 
         @text = head.fields[:text]
-        rest.each {|r| @text << "\n" + r.fields[:text] }
+        #rest.each {|r| @text << "\n" + r.fields[:text] }
 
       end
 

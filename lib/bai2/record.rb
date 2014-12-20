@@ -15,7 +15,7 @@ module Bai2
                     '88' => :continuation,
                     '98' => :group_trailer,
                     '99' => :file_trailer }
-    FIELDS = {
+    SIMPLE_FIELD_MAP = {
       file_header:     %w[record_code sender_identification
                           receiver_identification file_creation_date
                           file_creation_time file_identification_number
@@ -33,15 +33,16 @@ module Bai2
       transaction_detail: %w[record_code type_code amount funds_type
                              bank_reference_number customer_reference_number
                              text],
-      continuation:       %w[record_code text],
+      continuation:       %w[record_code continuation],
       # TODO: could continue any record at any point...
     }
 
 
     def initialize(line)
       @code = RECORD_CODES[line[0..1]]
-      @raw = line
-      @fields = parse_raw(@code, line)
+      # clean / delimiter
+      @raw = line.sub(/,\/.+$/, '').sub(/\/$/, '')
+      @fields = parse_raw(@code, @raw)
     end
 
     attr_reader :code, :raw, :fields
@@ -50,12 +51,24 @@ module Bai2
     private
 
     def parse_raw(code, line)
-      fields = (FIELDS[code] || []).map(&:to_sym)
-      # TODO: raise ParseError
-      raise BaiFile::ParseError.new('Unknown record code.') if fields.empty?
-      # clean / delimiter
-      clean = line.sub(/,\/.+$/, '').sub(/\/$/, '')
-      Hash[fields.zip(clean.split(',', fields.count))]
+
+      fields = (SIMPLE_FIELD_MAP[code] || []).map(&:to_sym)
+      if !fields.empty?
+        Hash[fields.zip(line.split(',', fields.count))]
+      elsif respond_to?("parse_#{code}_fields".to_sym)
+        send("parse_#{code}_fields".to_sym, line)
+      else
+        raise BaiFile::ParseError.new('Unknown record code.')
+      end
     end
+
+    # Special cases need special implementations.
+    #
+    def parse_account_indentifier_fields(record)
+
+      record_code, amount, record = clean.split(',', 3)
+      {}
+    end
+
   end
 end
