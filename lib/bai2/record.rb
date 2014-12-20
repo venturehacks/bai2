@@ -28,6 +28,13 @@ module Bai2
       account_trailer: %w[record_code account_control_total number_of_records],
       file_trailer:    %w[record_code file_control_total number_of_groups
                           number_of_records],
+      account_identifier: %w[record_code customer_account_number currency_code
+                             type_code amount item_count funds_type],
+      transaction_detail: %w[record_code type_code amount funds_type
+                             bank_reference_number customer_reference_number
+                             text],
+      continuation:       %w[record_code text],
+      # TODO: could continue any record at any point...
     }
 
 
@@ -35,11 +42,6 @@ module Bai2
       @code = RECORD_CODES[line[0..1]]
       @raw = line
       @fields = parse_raw(@code, line)
-
-      # define accessors
-      define_singleton_method(@code) do
-        fields[@code]
-      end
     end
 
     attr_reader :code, :raw, :fields
@@ -50,7 +52,7 @@ module Bai2
     def parse_raw(code, line)
       fields = (FIELDS[code] || []).map(&:to_sym)
       # TODO: raise ParseError
-      return if fields.empty?
+      raise BaiFile::ParseError.new('Unknown record code.') if fields.empty?
       # clean / delimiter
       clean = line.sub(/,\/.+$/, '').sub(/\/$/, '')
       Hash[fields.zip(clean.split(',', fields.count))]

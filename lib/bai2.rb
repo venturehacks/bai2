@@ -165,6 +165,7 @@ module Bai2
       root
     end
 
+
     # Parses the file_header root tree node, and creates the object hierarchy.
     #
     def parse_file_node(n)
@@ -185,7 +186,6 @@ module Bai2
 
     public
 
-    # TODO: write me; finish me
     class Group
 
       def initialize
@@ -245,7 +245,10 @@ module Bai2
     class Transaction
 
       def initialize
+        @text = nil
       end
+
+      attr_reader :text
 
       private
       def self.parse(node)
@@ -255,7 +258,16 @@ module Bai2
       end
 
       def parse(n)
-        head, tail = *n.records
+        head, *rest = *n.records
+
+        unless head.code == :transaction_detail && \
+            rest.all? {|t| t.code == :continuation }
+          raise BaiFile::ParseError.new('Unexpected record.')
+        end
+
+        @text = head.fields[:text]
+        rest.each {|r| @text << "\n" + r.fields[:text] }
+
       end
 
     end
