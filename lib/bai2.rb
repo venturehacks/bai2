@@ -52,7 +52,6 @@ module Bai2
 
     private
 
-
     # This delegates most of the work to Bai2::Parser to build the ParseNode
     # tree.
     #
@@ -80,15 +79,20 @@ module Bai2
     end
 
 
+
     public
 
     class Group
+      extend AttrReaderFromIvarHash
 
       def initialize
         @accounts = []
       end
 
       attr_reader :accounts
+
+      attr_reader_from_ivar_hash :@header,
+        :destination, :originator, :currency_code
 
       private
       def self.parse(node)
@@ -104,6 +108,8 @@ module Bai2
           raise ParseError.new('Unexpected record.')
         end
 
+        @header, @trailer = *n.records
+
         @accounts = n.children.map {|child| Account.send(:parse, child) }
       end
 
@@ -111,12 +117,16 @@ module Bai2
 
 
     class Account
+      extend AttrReaderFromIvarHash
 
       def initialize
         @transactions = []
       end
 
       attr_reader :transactions
+
+      attr_reader_from_ivar_hash :@header,
+        :customer, :currency_code
 
       private
       def self.parse(node)
@@ -132,6 +142,8 @@ module Bai2
           raise ParseError.new('Unexpected record.')
         end
 
+        @header, @trailer = *n.records
+
         @transactions = n.children.map {|child| Transaction.parse(child) }
       end
 
@@ -139,13 +151,10 @@ module Bai2
 
 
     class Transaction
+      extend AttrReaderFromIvarHash
 
-      def initialize
-        @text = nil
-      end
-
-      attr_reader :record
-      attr_reader :amount, :text, :type
+      attr_reader_from_ivar_hash :@record,
+        :amount, :text
 
       private
       def self.parse(node)
@@ -162,9 +171,6 @@ module Bai2
         end
 
         @record = head
-
-        @text = head.fields[:text]
-        @amount = head.fields[:amount]
 
       end
 
