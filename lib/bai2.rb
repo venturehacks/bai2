@@ -83,15 +83,6 @@ module Bai2
       end
       attr_reader :code
       attr_accessor :records, :children
-
-
-      def push_record(record)
-        self
-      end
-
-      private
-      def parse_record(record)
-      end
     end
 
 
