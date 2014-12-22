@@ -27,8 +27,8 @@ module Bai2
     SIMPLE_FIELD_MAP = {
       file_header: [
         :record_code,
-        :sender_identification,
-        :receiver_identification,
+        :sender,
+        :receiver,
         :file_creation_date,
         :file_creation_time,
         :file_identification_number,
@@ -98,6 +98,12 @@ module Bai2
     #
     def fields
       @fields ||= parse_raw(@code, @raw)
+    end
+
+    # A record can be accessed like a hash.
+    #
+    def [](key)
+      fields[key]
     end
 
     private

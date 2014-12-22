@@ -34,12 +34,18 @@ module Bai2
     # This is the raw data. Probably not super important.
     attr_reader :raw
 
-    # The transmitter and file recipient financial institutions.
-    attr_reader :sender, :recipient
-
     # The groups contained within this file.
     attr_reader :groups
 
+
+    # =========================================================================
+    # Record reading
+    #
+
+    extend AttrReaderFromIvarHash
+
+    # The transmitter and file recipient financial institutions.
+    attr_reader_from_ivar_hash :@header, :sender, :receiver
 
 
     # =========================================================================
@@ -66,10 +72,10 @@ module Bai2
       records = merge_continuations(records)
 
       # build the tree
-      @root = parse_tree(records)
+      root = parse_tree(records)
 
       # parse the file node; will descend tree and parse children
-      parse_file_node(@root)
+      parse_file_node(root)
 
     end
 
@@ -187,10 +193,7 @@ module Bai2
         raise ParseError.new('Unexpected record.')
       end
 
-      head, tail = *n.records
-
-      @sender    = head.fields[:sender_identification]
-      @recipient = head.fields[:receiver_identification]
+      @header, @trailer = *n.records
 
       @groups = n.children.map {|child| Group.send(:parse, child) }
     end
