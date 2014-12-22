@@ -83,15 +83,6 @@ module Bai2
         [:number_of_groups, :to_i],
         [:number_of_records, :to_i],
       ],
-      account_identifier: [
-        :record_code,
-        :customer,
-        :currency_code,
-        :type_code,
-        [:amount, :to_i],
-        [:item_count, :to_i],
-        :funds_type,
-      ],
       continuation: [ # TODO: could continue any record at any point...
         :record_code,
         :continuation,
@@ -159,42 +150,88 @@ module Bai2
       }
 
       # handle funds_type logic
-      with_fund_availability = \
+      funds_info, rest = *parse_funds_type(funds_type, rest)
+      with_funds_availability = common.merge(funds_info)
+
+      # split the rest of the constant fields
+      bank_ref, customer_ref, text = rest.split(',', 3).map(&:chomp)
+
+      with_funds_availability.merge(
+        bank_reference: bank_ref,
+        customer_reference: customer_ref,
+        text: text,
+      )
+    end
+
+    def parse_account_identifier_fields(record)
+      # account_identifier: [
+      #   :record_code,
+      #   :customer,
+      #   :currency_code,
+      #   :type_code,
+      #   [:amount, :to_i],
+      #   [:item_count, :to_i],
+      #   :funds_type,
+      # ],
+
+      # split out the constant bits
+      record_code, customer, currency_code, type_code, amount, \
+        items_count, funds_type, rest = record.split(',', 8).map(&:chomp)
+
+      common = {
+        record_code:   record_code,
+        customer:      customer,
+        currency_code: currency_code,
+        type_code:     type_code,
+        amount:        amount,
+        items_count:   items_count,
+        funds_type:    funds_type,
+      }
+
+      # handle funds_type logic
+      funds_info, rest = *parse_funds_type(funds_type, rest)
+      with_funds_availability = common.merge(funds_info)
+
+      # NOTE: rest should be empty
+
+      with_funds_availability
+    end
+
+    # Takes a `fund_type` field, and the rest, and return a hashed of
+    # interpreted values, and the new rest.
+    #
+    #   funds_type, rest = ...
+    #   funds_info, rest = *parse_funds_type(funds_type, rest)
+    #
+    def parse_funds_type(funds_type, rest)
+      info = \
         case funds_type
         when 'S'
           now, next_day, later, rest = rest.split(',', 4).map(&:chomp)
-          common.merge(
+          {
             availability: [
               {day: 0, amount: now},
               {day: 1, amount: now},
               {day: '>1', amount: now},
             ]
-          )
+          }
         when 'V'
           value_date, value_hour, rest = rest.split(',', 3).map(&:chomp)
           value_hour = '2400' if value_hour == '9999'
-          common.merge(
+          {
             value_dated: {date: value_date, hour: value_hour}
-          )
+          }
         when 'D'
           field_count, rest = rest.split(',', 2).map(&:chomp)
           availability = field_count.to_i.times.map do
             days, amount, rest = rest.split(',', 3).map(&:chomp)
             {days: days.to_i, amount: amount}
           end
-          common.merge(availability: availability)
+          {availability: availability}
         else
-          common
+          {}
         end
-
-      # split the rest of the constant fields
-      bank_ref, customer_ref, text = rest.split(',', 3).map(&:chomp)
-
-      with_fund_availability.merge(
-        bank_reference: bank_ref,
-        customer_reference: customer_ref,
-        text: text,
-      )
+      [info, rest]
     end
 
   end
