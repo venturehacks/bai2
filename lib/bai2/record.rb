@@ -15,23 +15,73 @@ module Bai2
                     '88' => :continuation,
                     '98' => :group_trailer,
                     '99' => :file_trailer }
+
+    # For each record code, this defines a simple way to automatically parse the
+    # fields. Each field has a list of the keys. Some keys are not simply string
+    # types, in which case they will be formatted as a tuple (key, fn), where fn
+    # is a block (or anything that responds to `to_proc`) that will be called to
+    # cast the value (e.g. `:to_i`).
+    #
+    # TODO: parse dates
+    #
     SIMPLE_FIELD_MAP = {
-      file_header:     %w[record_code sender_identification
-                          receiver_identification file_creation_date
-                          file_creation_time file_identification_number
-                          physical_record_length block_size version_number],
-      group_header:    %w[record_code ultimate_receiver_identification
-                          originator_identification group_status as_of_date
-                          as_of_time currency_code as_of_date_modifier],
-      group_trailer:   %w[record_code group_control_total number_of_accounts
-                          number_of_records],
-      account_trailer: %w[record_code account_control_total number_of_records],
-      file_trailer:    %w[record_code file_control_total number_of_groups
-                          number_of_records],
-      account_identifier: %w[record_code customer_account_number currency_code
-                             type_code amount item_count funds_type],
-      continuation:       %w[record_code continuation],
-      # TODO: could continue any record at any point...
+      file_header: [
+        :record_code,
+        :sender_identification,
+        :receiver_identification,
+        :file_creation_date,
+        :file_creation_time,
+        :file_identification_number,
+        [:physical_record_length, :to_i],
+        [:block_size, :to_i],
+        [:version_number, ->(v) do
+          unless v == "2"
+            raise BaiFile::ParseError.new("Unsupported BAI version (#{v} != 2)")
+          end; v.to_i
+        end],
+      ],
+      group_header: [
+        :record_code,
+        :ultimate_receiver_identification,
+        :originator_identification,
+        :group_status,
+        :as_of_date,
+        :as_of_time,
+        :currency_code,
+        :as_of_date_modifier,
+      ],
+      group_trailer: [
+        :record_code,
+        [:group_control_total, :to_i],
+        [:number_of_accounts, :to_i],
+        [:number_of_records, :to_i],
+      ],
+      account_trailer: [
+        :record_code,
+        [:account_control_total, :to_i],
+        [:number_of_records, :to_i],
+      ],
+      file_trailer: [
+        :record_code,
+        [:file_control_total, :to_i],
+        [:number_of_groups, :to_i],
+        [:number_of_records, :to_i],
+      ],
+      account_identifier: [
+        :record_code,
+        :customer_account_number,
+        :currency_code,
+        :type_code,
+        [:amount, :to_i],
+        [:item_count, :to_i],
+        :funds_type,
+      ],
+      continuation: [ # TODO: could continue any record at any point...
+        :record_code,
+        :continuation,
+      ],
+      # NOTE: transaction_detail is not present here, because it is too complex
+      # for a simple mapping like this.
     }
 
 
@@ -54,9 +104,14 @@ module Bai2
 
     def parse_raw(code, line)
 
-      fields = (SIMPLE_FIELD_MAP[code] || []).map(&:to_sym)
+      fields = (SIMPLE_FIELD_MAP[code] || [])
       if !fields.empty?
-        Hash[fields.zip(line.split(',', fields.count).map(&:chomp))]
+        split = line.split(',', fields.count).map(&:chomp)
+        Hash[fields.zip(split).map do |k,v|
+          next [k,v] if k.is_a?(Symbol)
+          key, block = k
+          [key, block.to_proc.call(v)]
+        end]
       elsif respond_to?("parse_#{code}_fields".to_sym, true)
         send("parse_#{code}_fields".to_sym, line)
       else
@@ -77,10 +132,11 @@ module Bai2
       common = {
         record_code: record_code,
         type_code:   type_code,
-        amount:      amount,
+        amount:      amount.to_i,
         funds_type:  funds_type,
       }
 
+      # handle funds_type logic
       with_fund_availability = \
         case funds_type
         when 'S'
@@ -109,6 +165,7 @@ module Bai2
           common
         end
 
+      # split the rest of the constant fields
       bank_ref, customer_ref, text = rest.split(',', 3).map(&:chomp)
 
       with_fund_availability.merge(

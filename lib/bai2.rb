@@ -1,5 +1,6 @@
 require 'bai2/version'
 require 'bai2/record'
+require 'bai2/attr-reader-from-ivar-hash'
 
 module Bai2
 
@@ -259,7 +260,8 @@ module Bai2
         @text = nil
       end
 
-      attr_reader :text
+      attr_reader :record
+      attr_reader :amount, :text, :type
 
       private
       def self.parse(node)
@@ -275,11 +277,11 @@ module Bai2
           raise BaiFile::ParseError.new('Unexpected record.')
         end
 
+        @record = head
+
         @text = head.fields[:text]
         @amount = head.fields[:amount]
 
-        binding.pry
-        puts nil
       end
 
     end
