@@ -95,10 +95,7 @@ module Bai2
           merged << record
         else
           last = merged.pop
-          # NOTE: hacky, shouldn't be relying on a Record implementation detail.
-          last_field = (Record::SIMPLE_FIELD_MAP[last.code] || []).last
-          prefix = (last_field == 'text') ? "\n" : ','
-          new_record = Record.new(last.raw + prefix + record.fields[:continuation])
+          new_record = Record.new(last.raw + ",\n" + record.fields[:continuation])
           merged << new_record
         end
       end
@@ -279,8 +276,10 @@ module Bai2
         end
 
         @text = head.fields[:text]
-        #rest.each {|r| @text << "\n" + r.fields[:text] }
+        @amount = head.fields[:amount]
 
+        binding.pry
+        puts nil
       end
 
     end
