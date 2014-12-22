@@ -1,3 +1,4 @@
+require 'bai2/parser'
 
 module Bai2
 
@@ -36,7 +37,7 @@ module Bai2
         [:block_size, :to_i],
         [:version_number, ->(v) do
           unless v == "2"
-            raise BaiFile::ParseError.new("Unsupported BAI version (#{v} != 2)")
+            raise ParseError.new("Unsupported BAI version (#{v} != 2)")
           end; v.to_i
         end],
       ],
@@ -121,7 +122,7 @@ module Bai2
       elsif respond_to?("parse_#{code}_fields".to_sym, true)
         send("parse_#{code}_fields".to_sym, line)
       else
-        raise BaiFile::ParseError.new('Unknown record code.')
+        raise ParseError.new('Unknown record code.')
       end
     end
 
