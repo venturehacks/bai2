@@ -48,6 +48,9 @@ module Bai2
     # The transmitter and file recipient financial institutions.
     attr_reader_from_ivar_hash :@header, :sender, :receiver
 
+    def file_creation_datetime
+      @header[:file_creation_date] + @header[:file_creation_time]
+    end
 
 
     private
@@ -93,6 +96,10 @@ module Bai2
 
       attr_reader_from_ivar_hash :@header,
         :destination, :originator, :currency_code
+
+      def as_of_datetime
+        @header[:as_of_date] + @header[:as_of_time]
+      end
 
       private
       def self.parse(node)

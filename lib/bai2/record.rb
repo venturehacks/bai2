@@ -1,5 +1,7 @@
 require 'bai2/parser'
 
+require 'time'
+
 module Bai2
 
   # This class represents a record. It knows how to parse the single record
@@ -17,21 +19,34 @@ module Bai2
                     '98' => :group_trailer,
                     '99' => :file_trailer }
 
+
+    # These parsing blocks are used below for the special date format BAI2 uses.
+    # Assumes UTC, because we do not have timezone information.
+
+    # Returns a date object
+    ParseDate = ->(v) do
+      Time.strptime("#{v} utc", '%y%m%d %Z')
+    end
+
+    # Returns a time interval in seconds, to be added to the date
+    ParseMilitaryTime = -> (v) do
+      v = '2400' if v == '9999'
+      Time.strptime("#{v} utc", '%H%M %Z').to_i % 86400
+    end
+
     # For each record code, this defines a simple way to automatically parse the
     # fields. Each field has a list of the keys. Some keys are not simply string
     # types, in which case they will be formatted as a tuple (key, fn), where fn
     # is a block (or anything that responds to `to_proc`) that will be called to
     # cast the value (e.g. `:to_i`).
     #
-    # TODO: parse dates
-    #
     SIMPLE_FIELD_MAP = {
       file_header: [
         :record_code,
         :sender,
         :receiver,
-        :file_creation_date,
-        :file_creation_time,
+        [:file_creation_date, ParseDate],
+        [:file_creation_time, ParseMilitaryTime],
         :file_identification_number,
         [:physical_record_length, :to_i],
         [:block_size, :to_i],
@@ -43,11 +58,11 @@ module Bai2
       ],
       group_header: [
         :record_code,
-        :ultimate_receiver_identification,
-        :originator_identification,
+        :destination,
+        :originator,
         :group_status,
-        :as_of_date,
-        :as_of_time,
+        [:as_of_date, ParseDate],
+        [:as_of_time, ParseMilitaryTime],
         :currency_code,
         :as_of_date_modifier,
       ],
@@ -70,7 +85,7 @@ module Bai2
       ],
       account_identifier: [
         :record_code,
-        :customer_account_number,
+        :customer,
         :currency_code,
         :type_code,
         [:amount, :to_i],
