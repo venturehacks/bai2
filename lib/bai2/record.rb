@@ -1,4 +1,5 @@
 require 'bai2/parser'
+require 'bai2/type-code-data.rb'
 
 require 'time'
 
@@ -32,6 +33,16 @@ module Bai2
     ParseMilitaryTime = -> (v) do
       v = '2400' if v == '9999'
       Time.strptime("#{v} utc", '%H%M %Z').to_i % 86400
+    end
+
+    ParseTypeCode = -> (code) do
+      meaning = TypeCodeData[code.to_i] || [nil, nil, nil]
+      {
+        code:        code.to_i,
+        transaction: meaning[0],
+        scope:       meaning[1],
+        description: meaning[2],
+      }
     end
 
     # For each record code, this defines a simple way to automatically parse the
@@ -144,7 +155,7 @@ module Bai2
 
       common = {
         record_code: record_code,
-        type_code:   type_code,
+        type:        ParseTypeCode[type_code],
         amount:      amount.to_i,
         funds_type:  funds_type,
       }
@@ -164,15 +175,6 @@ module Bai2
     end
 
     def parse_account_identifier_fields(record)
-      # account_identifier: [
-      #   :record_code,
-      #   :customer,
-      #   :currency_code,
-      #   :type_code,
-      #   [:amount, :to_i],
-      #   [:item_count, :to_i],
-      #   :funds_type,
-      # ],
 
       # split out the constant bits
       record_code, customer, currency_code, type_code, amount, \
@@ -182,7 +184,7 @@ module Bai2
         record_code:   record_code,
         customer:      customer,
         currency_code: currency_code,
-        type_code:     type_code,
+        type:          ParseTypeCode[type_code],
         amount:        amount,
         items_count:   items_count,
         funds_type:    funds_type,

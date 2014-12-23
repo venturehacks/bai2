@@ -133,7 +133,7 @@ module Bai2
       attr_reader :transactions
 
       attr_reader_from_ivar_hash :@header,
-        :customer, :currency_code
+        :customer, :currency_code, :amount, :type
 
       private
       def self.parse(node)
@@ -161,7 +161,7 @@ module Bai2
       extend AttrReaderFromIvarHash
 
       attr_reader_from_ivar_hash :@record,
-        :amount, :text
+        :amount, :text, :type
 
       private
       def self.parse(node)
