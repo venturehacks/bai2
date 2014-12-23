@@ -163,6 +163,14 @@ module Bai2
       attr_reader_from_ivar_hash :@record,
         :amount, :text, :type
 
+      def is_debit?
+        type[:transaction] == :debit
+      end
+
+      def is_credit?
+        type[:transaction] == :credit
+      end
+
       private
       def self.parse(node)
         self.new.tap do |g|

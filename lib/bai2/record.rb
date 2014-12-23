@@ -185,7 +185,7 @@ module Bai2
         customer:      customer,
         currency_code: currency_code,
         type:          ParseTypeCode[type_code],
-        amount:        amount,
+        amount:        amount.to_i,
         items_count:   items_count,
         funds_type:    funds_type,
       }
