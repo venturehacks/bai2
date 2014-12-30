@@ -43,7 +43,7 @@ file.groups.filter {|g| g.destination == YourOrgId }.each do |group|
 
     # amounts are strings, you may want to wrap it in your decimal or money lib
     # of choice.
-     puts account.amount, BigDecimal(account.amount).inspect
+    puts account.amount, BigDecimal(account.amount).inspect
 
     # accounts have transactions
 
