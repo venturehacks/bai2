@@ -177,26 +177,36 @@ module Bai2
     def parse_account_identifier_fields(record)
 
       # split out the constant bits
-      record_code, customer, currency_code, type_code, amount, \
-        items_count, funds_type, rest = record.split(',', 8).map(&:chomp)
+      record_code, customer, currency_code, rest = record.split(',', 4).map(&:chomp)
 
       common = {
         record_code:   record_code,
         customer:      customer,
         currency_code: currency_code,
-        type:          ParseTypeCode[type_code],
-        amount:        amount.to_i,
-        items_count:   items_count,
-        funds_type:    funds_type,
+        amounts:       [],
       }
 
-      # handle funds_type logic
-      funds_info, rest = *parse_funds_type(funds_type, rest)
-      with_funds_availability = common.merge(funds_info)
+      # sadly, imperative style seems cleaner. would prefer it functional.
+      until rest.nil? || rest.empty?
 
-      # NOTE: rest should be empty
+        type_code, amount, items_count, funds_type, rest \
+          = rest.split(',', 5).map(&:chomp)
 
-      with_funds_availability
+        amount_details = {
+          type:          ParseTypeCode[type_code],
+          amount:        amount.to_i,
+          items_count:   items_count,
+          funds_type:    funds_type,
+        }
+
+        # handle funds_type logic
+        funds_info, rest = *parse_funds_type(funds_type, rest)
+        with_funds_availability = amount_details.merge(funds_info)
+
+        common[:amounts] << with_funds_availability
+      end
+
+      common
     end
 
     # Takes a `fund_type` field, and the rest, and return a hashed of
