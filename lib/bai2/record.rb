@@ -3,8 +3,6 @@ require 'bai2/type-code-data.rb'
 
 require 'time'
 
-require 'bigdecimal'
-
 module Bai2
 
   # This class represents a record. It knows how to parse the single record
@@ -47,12 +45,6 @@ module Bai2
       }
     end
 
-    # A simple wrapper around BigDecimal right now. May be configurable in the
-    # future.
-    ParseDecimal = -> (v) do
-      BigDecimal(v)
-    end
-
     # For each record code, this defines a simple way to automatically parse the
     # fields. Each field has a list of the keys. Some keys are not simply string
     # types, in which case they will be formatted as a tuple (key, fn), where fn
@@ -87,18 +79,18 @@ module Bai2
       ],
       group_trailer: [
         :record_code,
-        [:group_control_total, ParseDecimal],
+        [:group_control_total, :to_i],
         [:number_of_accounts, :to_i],
         [:number_of_records, :to_i],
       ],
       account_trailer: [
         :record_code,
-        [:account_control_total, ParseDecimal],
+        [:account_control_total, :to_i],
         [:number_of_records, :to_i],
       ],
       file_trailer: [
         :record_code,
-        [:file_control_total, ParseDecimal],
+        [:file_control_total, :to_i],
         [:number_of_groups, :to_i],
         [:number_of_records, :to_i],
       ],
@@ -164,7 +156,7 @@ module Bai2
       common = {
         record_code: record_code,
         type:        ParseTypeCode[type_code],
-        amount:      ParseDecimal[amount],
+        amount:      amount.to_i,
         funds_type:  funds_type,
       }
 
@@ -202,7 +194,7 @@ module Bai2
 
         amount_details = {
           type:          ParseTypeCode[type_code],
-          amount:        ParseDecimal[amount],
+          amount:        amount.to_i,
           items_count:   items_count,
           funds_type:    funds_type,
         }
