@@ -95,7 +95,7 @@ module Bai2
       attr_reader :accounts
 
       attr_reader_from_ivar_hash :@header,
-        :destination, :originator, :currency_code
+        :destination, :originator, :currency_code, :group_status
 
       def as_of_datetime
         @header[:as_of_date] + @header[:as_of_time]
@@ -161,7 +161,7 @@ module Bai2
       extend AttrReaderFromIvarHash
 
       attr_reader_from_ivar_hash :@record,
-        :amount, :text, :type
+        :amount, :text, :type, :bank_reference, :customer_reference
 
       def debit?
         type[:transaction] == :debit
