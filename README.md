@@ -39,11 +39,10 @@ file.groups.filter {|g| g.destination == YourOrgId }.each do |group|
   # groups have accounts
   group.accounts.each do |account|
 
-    puts account.customer, account.currency_code, account.type
+    puts account.customer, account.currency_code
 
-    # amounts are strings, you may want to wrap it in your decimal or money lib
-    # of choice.
-    puts account.amount, BigDecimal(account.amount).inspect
+    # summaries are arrays of hashes
+    puts account.summaries.inspect
 
     # accounts have transactions
 
