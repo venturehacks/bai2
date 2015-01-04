@@ -183,7 +183,7 @@ module Bai2
         record_code:   record_code,
         customer:      customer,
         currency_code: currency_code,
-        amounts:       [],
+        summaries:     [],
       }
 
       # sadly, imperative style seems cleaner. would prefer it functional.
@@ -203,7 +203,7 @@ module Bai2
         funds_info, rest = *parse_funds_type(funds_type, rest)
         with_funds_availability = amount_details.merge(funds_info)
 
-        common[:amounts] << with_funds_availability
+        common[:summaries] << with_funds_availability
       end
 
       common
