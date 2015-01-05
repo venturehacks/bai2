@@ -125,7 +125,6 @@ module Bai2
 
             # handling special known errors
           else # nil
-            binding.pry
             raise ParseError.new('Unknown or unexpected record code.')
           end
         end
