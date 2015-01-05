@@ -46,6 +46,11 @@ module Bai2
       }
     end
 
+    # Cleans up text in continuations, removing leading commas
+    CleanContinuedText = -> (text) do
+      text.gsub(/,?,\n/, "\n").gsub(/^\n/, '')
+    end
+
     # This block ensures that only version 2 of the BAI standard is accepted
     AssertVersion2 = ->(v) do
       unless v == "2"
@@ -176,7 +181,7 @@ module Bai2
       with_funds_availability.merge(
         bank_reference: bank_ref,
         customer_reference: customer_ref,
-        text: text,
+        text: CleanContinuedText[text],
       )
     end
 
