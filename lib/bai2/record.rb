@@ -35,6 +35,7 @@ module Bai2
       Time.strptime("#{v} utc", '%H%M %Z').to_i % 86400
     end
 
+    # Parses a type code, returns a structured informative hash
     ParseTypeCode = -> (code) do
       meaning = TypeCodeData[code.to_i] || [nil, nil, nil]
       {
@@ -43,6 +44,14 @@ module Bai2
         scope:       meaning[1],
         description: meaning[2],
       }
+    end
+
+    # This block ensures that only version 2 of the BAI standard is accepted
+    AssertVersion2 = ->(v) do
+      unless v == "2"
+        raise ParseError.new("Unsupported BAI version (#{v} != 2)")
+      end
+      v.to_i
     end
 
     # For each record code, this defines a simple way to automatically parse the
@@ -61,11 +70,7 @@ module Bai2
         :file_identification_number,
         [:physical_record_length, :to_i],
         [:block_size, :to_i],
-        [:version_number, ->(v) do
-          unless v == "2"
-            raise ParseError.new("Unsupported BAI version (#{v} != 2)")
-          end; v.to_i
-        end],
+        [:version_number, AssertVersion2],
       ],
       group_header: [
         :record_code,
