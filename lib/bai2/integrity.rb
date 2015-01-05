@@ -117,8 +117,8 @@ module Bai2
         end.reduce(0, &:+)
 
         unless expectation[:records] == (actual = records + 2)
-          raise IntegrityError.new(
-            "Record count invalid: file: #{expectation[:records]}, accounts: #{actual}")
+          raise IntegrityError.new("Record count invalid: " \
+            + "account: #{expectation[:records]}, transactions: #{actual}")
         end
 
         # Return record count
