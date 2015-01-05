@@ -1,6 +1,7 @@
 require 'bai2/version'
 require 'bai2/record'
 require 'bai2/parser'
+require 'bai2/integrity'
 require 'bai2/attr-reader-from-ivar-hash'
 
 module Bai2
@@ -64,6 +65,9 @@ module Bai2
 
       # parse the file node; will descend tree and parse children
       parse_file_node(root)
+
+      # assert integrity
+      assert_integrity!
     end
 
 
@@ -82,6 +86,9 @@ module Bai2
     end
 
 
+    # =========================================================================
+    # Entities
+    #
 
     public
 

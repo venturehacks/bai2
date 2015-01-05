@@ -57,7 +57,8 @@ module Bai2
             merged << record
           else
             last = merged.pop
-            new_record = Record.new(last.raw + ",\n" + record.fields[:continuation])
+            new_record = Record.new(last.raw + ",\n" + record.fields[:continuation],
+                                    last.physical_record_count + 1)
             merged << new_record
           end
         end

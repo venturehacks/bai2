@@ -108,15 +108,16 @@ module Bai2
     }
 
 
-    def initialize(line)
+    def initialize(line, physical_record_count = 1)
       @code = RECORD_CODES[line[0..1]]
+      @physical_record_count = physical_record_count
       # clean / delimiter
       @raw = line.sub(/,\/.+$/, '').sub(/\/$/, '')
     end
 
-    attr_reader :code, :raw
+    attr_reader :code, :raw, :physical_record_count
 
-    # NOTE: fields is called upon first user, so as not to parse records right
+    # NOTE: fields is called upon first use, so as not to parse records right
     # away in case they might be merged with a continuation.
     #
     def fields
