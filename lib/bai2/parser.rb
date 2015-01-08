@@ -53,13 +53,13 @@ module Bai2
       def merge_continuations(records)
         merged = []
         records.each do |record|
-          unless record.code == :continuation
-            merged << record
-          else
-            last = merged.pop
+          if record.code == :continuation
+            last       = merged.pop
             new_record = Record.new(last.raw + ",\n" + record.fields[:continuation],
                                     last.physical_record_count + 1)
             merged << new_record
+          else
+            merged << record
           end
         end
         merged

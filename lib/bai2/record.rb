@@ -179,9 +179,9 @@ module Bai2
       bank_ref, customer_ref, text = rest.split(',', 3).map(&:chomp)
 
       with_funds_availability.merge(
-        bank_reference: bank_ref,
+        bank_reference:     bank_ref,
         customer_reference: customer_ref,
-        text: CleanContinuedText[text],
+        text:               CleanContinuedText[text],
       )
     end
 
@@ -233,8 +233,8 @@ module Bai2
           now, next_day, later, rest = rest.split(',', 4).map(&:chomp)
           {
             availability: [
-              {day: 0, amount: now},
-              {day: 1, amount: now},
+              {day: 0,    amount: now},
+              {day: 1,    amount: now},
               {day: '>1', amount: now},
             ]
           }
