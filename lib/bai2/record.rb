@@ -10,7 +10,6 @@ module Bai2
   #
   class Record
 
-
     RECORD_CODES = {'01' => :file_header,
                     '02' => :group_header,
                     '03' => :account_identifier,

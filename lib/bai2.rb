@@ -11,9 +11,6 @@ module Bai2
   #
   class BaiFile
 
-    # TODO:
-    # - run checksums
-
     # Parse a file on disk:
     #
     #   f = BaiFile.parse('myfile.bai2')
@@ -193,7 +190,6 @@ module Bai2
         end
 
         @record = head
-
       end
 
     end

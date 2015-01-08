@@ -6,7 +6,6 @@ module Bai2
 
   module Parser
 
-
     # Wrapper object to represent a tree node.
     #
     class ParseNode
