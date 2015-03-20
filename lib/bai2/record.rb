@@ -140,7 +140,7 @@ module Bai2
 
       fields = (SIMPLE_FIELD_MAP[code] || [])
       if !fields.empty?
-        split = line.split(',', fields.count).map(&:chomp)
+        split = line.split(',', fields.count).map(&:strip)
         Hash[fields.zip(split).map do |k,v|
           next [k,v] if k.is_a?(Symbol)
           key, block = k
@@ -161,7 +161,7 @@ module Bai2
     def parse_transaction_detail_fields(record)
 
       # split out the constant bits
-      record_code, type_code, amount, funds_type, rest = record.split(',', 5).map(&:chomp)
+      record_code, type_code, amount, funds_type, rest = record.split(',', 5).map(&:strip)
 
       common = {
         record_code: record_code,
@@ -175,7 +175,7 @@ module Bai2
       with_funds_availability = common.merge(funds_info)
 
       # split the rest of the constant fields
-      bank_ref, customer_ref, text = rest.split(',', 3).map(&:chomp)
+      bank_ref, customer_ref, text = rest.split(',', 3).map(&:strip)
 
       with_funds_availability.merge(
         bank_reference:     bank_ref,
@@ -187,7 +187,7 @@ module Bai2
     def parse_account_identifier_fields(record)
 
       # split out the constant bits
-      record_code, customer, currency_code, rest = record.split(',', 4).map(&:chomp)
+      record_code, customer, currency_code, rest = record.split(',', 4).map(&:strip)
 
       common = {
         record_code:   record_code,
@@ -200,7 +200,7 @@ module Bai2
       until rest.nil? || rest.empty?
 
         type_code, amount, items_count, funds_type, rest \
-          = rest.split(',', 5).map(&:chomp)
+          = rest.split(',', 5).map(&:strip)
 
         amount_details = {
           type:          ParseTypeCode[type_code],
@@ -229,7 +229,7 @@ module Bai2
       info = \
         case funds_type
         when 'S'
-          now, next_day, later, rest = rest.split(',', 4).map(&:chomp)
+          now, next_day, later, rest = rest.split(',', 4).map(&:strip)
           {
             availability: [
               {day: 0,    amount: now},
@@ -238,15 +238,15 @@ module Bai2
             ]
           }
         when 'V'
-          value_date, value_hour, rest = rest.split(',', 3).map(&:chomp)
+          value_date, value_hour, rest = rest.split(',', 3).map(&:strip)
           value_hour = '2400' if value_hour == '9999'
           {
             value_dated: {date: value_date, hour: value_hour}
           }
         when 'D'
-          field_count, rest = rest.split(',', 2).map(&:chomp)
+          field_count, rest = rest.split(',', 2).map(&:strip)
           availability = field_count.to_i.times.map do
-            days, amount, rest = rest.split(',', 3).map(&:chomp)
+            days, amount, rest = rest.split(',', 3).map(&:strip)
             {days: days.to_i, amount: amount}
           end
           {availability: availability}

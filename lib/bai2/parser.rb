@@ -29,7 +29,7 @@ module Bai2
       def parse(data)
 
         # split records, handle stupid DOS-format files, instantiate records
-        records = data.split("\n").map(&:chomp).map {|l| Record.new(l) }
+        records = data.split("\n").map(&:strip).map {|l| Record.new(l) }
 
         # merge continuations
         records = merge_continuations(records)
