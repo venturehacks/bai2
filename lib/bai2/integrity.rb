@@ -101,7 +101,9 @@ module Bai2
 
         # Check sum vs. summary + transaction sums
         actual_sum = self.transactions.map(&:amount).reduce(0, &:+) \
-          + self.summaries.map {|s| s[:amount] }.reduce(0, &:+)
+          #+ self.summaries.map {|s| s[:amount] }.reduce(0, &:+)
+          # TODO: ^ there seems to be a disconnect between what the spec defines
+          # as the formula for the checksum and what SVB implements...
 
         unless expectation[:sum] == actual_sum
           raise IntegrityError.new(
