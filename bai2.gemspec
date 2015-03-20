@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['kenneth@ballenegger.com']
   spec.summary       = %q{Parse BAI2 files.}
   spec.description   = %q{Parse BAI2 files.}
-  spec.homepage      = 'https://github/venturehacks/bai2_file'
+  spec.homepage      = 'https://github/venturehacks/bai2'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
