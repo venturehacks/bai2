@@ -76,6 +76,23 @@ file.groups.filter {|g| g.destination == YourOrgId }.each do |group|
 end
 ```
 
+## Caveats
+
+In `lib/bai2/integrity.rb`, we perform integrity checks mandated by the Bai2
+standard. In our experience, the spec and bank’s real implementations differ on
+how sums are calculated. It’s hard to tell if this an industry-wide trend, or
+just an SVB quirk. I would love to hear how other banks do this. GitHub Issues
+with more information on this would be greatly appreciated.
+
+```ruby
+# Check sum vs. summary + transaction sums
+actual_sum = self.transactions.map(&:amount).reduce(0, &:+) \
+  #+ self.summaries.map {|s| s[:amount] }.reduce(0, &:+)
+  # TODO: ^ there seems to be a disconnect between what the spec defines
+  # as the formula for the checksum and what SVB implements...
+```
+
+
 ## Contributing
 
 1. Fork it ( https://github.com/venturehacks/bai2/fork )
