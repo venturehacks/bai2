@@ -1,3 +1,3 @@
 module Bai2
-  VERSION = '0.0.4'
+  VERSION = '1.0.0'
 end
