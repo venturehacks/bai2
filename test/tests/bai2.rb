@@ -7,11 +7,15 @@ class Bai2Test < Minitest::Test
   def setup
     @daily = Bai2::BaiFile.parse(File.expand_path('../../data/daily.bai2', __FILE__))
     @eod = Bai2::BaiFile.parse(File.expand_path('../../data/eod.bai2', __FILE__))
+
+    @daily_with_summary = Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_summary.bai2', __FILE__),
+                                            num_account_summary_continuation_records: 3)
   end
 
   def test_parsing
     assert_kind_of(Bai2::BaiFile, @daily)
     assert_kind_of(Bai2::BaiFile, @eod)
+    assert_kind_of(Bai2::BaiFile, @daily_with_summary)
   end
 
   def test_groups
@@ -54,6 +58,17 @@ class Bai2Test < Minitest::Test
       scope: :detail,
       description: 'Incoming Money Transfer'
     })
+  end
+
+  def test_integrity
+    assert_raises Bai2::BaiFile::IntegrityError do
+      # Calling without the options: num_account_summary_continuation_records => 3 should raise an error
+      Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_summary.bai2', __FILE__))
+    end
+    assert_raises Bai2::BaiFile::IntegrityError do
+      # An invalid amount checksum should raise an error
+      Bai2::BaiFile.parse(File.expand_path('../../data/invalid_checksum_eod.bai2', __FILE__))
+    end
   end
 
 end

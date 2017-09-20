@@ -36,12 +36,14 @@ module Bai2
       end
 
       # Run children assertions, which return number of records. May raise.
-      records = self.groups.map {|g| g.send(:assert_integrity!) }.reduce(0, &:+)
+      records = self.groups.map {|g| g.send(:assert_integrity!, @options) }.reduce(0, &:+)
 
-      unless expectation[:records] == (actual = records + 2)
+      unless expectation[:records] == (actual_num_records = records + 2)
         raise IntegrityError.new(
-          "Record count invalid: file: #{expectation[:records]}, groups: #{actual}")
+          "Record count invalid: file: #{expectation[:records]}, groups: #{actual_num_records}")
       end
+
+      actual_num_records
     end
 
 
@@ -53,7 +55,7 @@ module Bai2
 
       # Asserts integrity of a fully-parsed BaiFile by calculating checksums.
       #
-      def assert_integrity!
+      def assert_integrity!(options)
         expectation = {
           sum:      @trailer[:group_control_total],
           children: @trailer[:number_of_accounts],
@@ -77,15 +79,15 @@ module Bai2
         end
 
         # Run children assertions, which return number of records. May raise.
-        records = self.accounts.map {|a| a.send(:assert_integrity!) }.reduce(0, &:+)
+        records = self.accounts.map {|a| a.send(:assert_integrity!, options) }.reduce(0, &:+)
 
-        unless expectation[:records] == (actual = records + 2)
+        unless expectation[:records] == (actual_num_records = records + 2)
           raise IntegrityError.new(
-            "Record count invalid: group: #{expectation[:records]}, accounts: #{actual}")
+            "Record count invalid: group: #{expectation[:records]}, accounts: #{actual_num_records}")
         end
 
         # Return record count
-        records + 2
+        actual_num_records
       end
     end
 
@@ -93,17 +95,23 @@ module Bai2
     class Account
       private
 
-      def assert_integrity!
+      def assert_integrity!(options)
         expectation = {
           sum:      @trailer[:account_control_total],
           records:  @trailer[:number_of_records],
         }
 
         # Check sum vs. summary + transaction sums
-        actual_sum = self.transactions.map(&:amount).reduce(0, &:+) \
-          #+ self.summaries.map {|s| s[:amount] }.reduce(0, &:+)
-          # TODO: ^ there seems to be a disconnect between what the spec defines
-          # as the formula for the checksum and what SVB implements...
+        summary_amounts_sum = self.summaries.map {|s| s[:amount] }.reduce(0, &:+)
+        transaction_amounts_sum = self.transactions.map(&:amount).reduce(0, &:+)
+
+        # Some banks differ from the spec (*cough* SVB) and do not include
+        # the summary amounts in the control amount.
+        actual_sum = if options[:account_control_ignores_summary_amounts]
+                       transaction_amounts_sum
+                     else
+                       transaction_amounts_sum + summary_amounts_sum
+                     end
 
         unless expectation[:sum] == actual_sum
           raise IntegrityError.new(
@@ -115,13 +123,19 @@ module Bai2
           tx.instance_variable_get(:@record).physical_record_count
         end.reduce(0, &:+)
 
-        unless expectation[:records] == (actual = records + 2)
-          raise IntegrityError.new("Record count invalid: " \
-            + "account: #{expectation[:records]}, transactions: #{actual}")
+        # Account for the account header and the account trailer records
+        # and any additional summary records (Some banks use continuation records
+        # for account summaries, others put the summary data on the same row as the header)
+        additional_records = 2 + options[:num_account_summary_continuation_records]
+        actual_num_records = records + additional_records
+
+        unless expectation[:records] == actual_num_records
+          raise IntegrityError.new(
+              "Record count invalid: account: #{expectation[:records]}, transactions: #{actual_num_records}")
         end
 
         # Return record count
-        records + 2
+        actual_num_records
       end
     end
   end
