@@ -30,6 +30,7 @@ module Bai2
 
     # Returns a time interval in seconds, to be added to the date
     ParseMilitaryTime = -> (v) do
+      v = '0000' if (v == '' || v == nil)
       v = '2400' if v == '9999'
       Time.strptime("#{v} utc", '%H%M %Z').to_i % 86400
     end
