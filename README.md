@@ -75,6 +75,26 @@ file.groups.filter {|g| g.destination == YourOrgId }.each do |group|
   end
 end
 ```
+## Options
+`Bai2::BaiFile.parse` and `Bai2::BaiFile.new` accept an optional second parameter, `options`.
+
+* `options[:account_control_ignores_summary_amounts]` (Boolean, Default: False)
+See [Caveats](#caveats) below. Optionally ignores the amounts in the account summary fields when calculating the account control checksum.
+This value should be set only if you know that your bank uses this nonstandard calculation for
+account control values.
+
+* `options[:num_account_summary_continuation_records]` (Integer, Default: 0)
+The number of continuation records the account summary.
+
+
+##### Usage:
+
+```ruby
+Bai2::BaiFile.new(string_data,
+                  account_control_ignores_summary_amounts: true,
+                  num_account_summary_continuation_records: 3)
+```
+
 
 ## Caveats
 
@@ -85,11 +105,13 @@ just an SVB quirk. I would love to hear how other banks do this. GitHub Issues
 with more information on this would be greatly appreciated.
 
 ```ruby
-# Check sum vs. summary + transaction sums
-actual_sum = self.transactions.map(&:amount).reduce(0, &:+) \
-  #+ self.summaries.map {|s| s[:amount] }.reduce(0, &:+)
-  # TODO: ^ there seems to be a disconnect between what the spec defines
-  # as the formula for the checksum and what SVB implements...
+# Some banks differ from the spec (*cough* SVB) and do not include
+# the summary amounts in the control amount.
+actual_sum = if options[:account_control_ignores_summary_amounts]
+               transaction_amounts_sum
+             else
+               transaction_amounts_sum + summary_amounts_sum
+             end
 ```
 
 

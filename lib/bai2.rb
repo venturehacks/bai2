@@ -11,12 +11,17 @@ module Bai2
   #
   class BaiFile
 
+    DEFAULT_OPTIONS = {
+      account_control_ignores_summary_amounts: false,
+      num_account_summary_continuation_records: 0
+    }.freeze
+
     # Parse a file on disk:
     #
     #   f = BaiFile.parse('myfile.bai2')
     #
-    def self.parse(path)
-      self.new(File.read(path))
+    def self.parse(path, options = {})
+      self.new(File.read(path), options)
     end
 
 
@@ -24,9 +29,10 @@ module Bai2
     #
     #   f = BaiFile.new(bai2_data)
     #
-    def initialize(raw)
+    def initialize(raw, options = {})
       @raw = raw
       @groups = []
+      @options = DEFAULT_OPTIONS.merge(options)
       parse(raw)
     end
 

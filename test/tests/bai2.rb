@@ -6,16 +6,23 @@ class Bai2Test < Minitest::Test
 
   def setup
     @daily = Bai2::BaiFile.parse(File.expand_path('../../data/daily.bai2', __FILE__))
+    @daily_with_summary = Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_summary.bai2', __FILE__),
+                                              num_account_summary_continuation_records: 3)
+
     @eod = Bai2::BaiFile.parse(File.expand_path('../../data/eod.bai2', __FILE__))
+    @eod_no_as_of_time = Bai2::BaiFile.parse(File.expand_path('../../data/eod_without_as_of_time.bai2', __FILE__))
+
+    @all_files = [@daily, @daily_with_summary, @eod, @eod_no_as_of_time]
   end
 
   def test_parsing
-    assert_kind_of(Bai2::BaiFile, @daily)
-    assert_kind_of(Bai2::BaiFile, @eod)
+    @all_files.each do |file|
+      assert_kind_of(Bai2::BaiFile, file)
+    end
   end
 
   def test_groups
-    [@daily, @eod].each do |file|
+    @all_files.each do |file|
       assert_kind_of(Array, file.groups)
       assert_equal(1, file.groups.count)
       group = file.groups.first
@@ -27,8 +34,8 @@ class Bai2Test < Minitest::Test
   end
 
   def test_accounts
-    [@daily, @eod].each do |file|
-      accounts = @daily.groups.first.accounts
+    @all_files.each do |file|
+      accounts = file.groups.first.accounts
       assert_kind_of(Array, accounts)
       assert_equal(1, accounts.count)
       assert_kind_of(Bai2::BaiFile::Account, accounts.first)
@@ -54,6 +61,17 @@ class Bai2Test < Minitest::Test
       scope: :detail,
       description: 'Incoming Money Transfer'
     })
+  end
+
+  def test_integrity
+    assert_raises Bai2::BaiFile::IntegrityError do
+      # Calling without the options: num_account_summary_continuation_records => 3 should raise an error
+      Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_summary.bai2', __FILE__))
+    end
+    assert_raises Bai2::BaiFile::IntegrityError do
+      # An invalid amount checksum should raise an error
+      Bai2::BaiFile.parse(File.expand_path('../../data/invalid_checksum_eod.bai2', __FILE__))
+    end
   end
 
 end
