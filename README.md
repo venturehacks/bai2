@@ -86,6 +86,9 @@ account control values.
 * `options[:num_account_summary_continuation_records]` (Integer, Default: 0)
 The number of continuation records the account summary.
 
+* `options[:continuations_slash_delimit_end_of_line_only]` (Boolean, Default: False)
+This allows continuation records to begin with `88,\` and still have the text including the slash to be processed.
+
 
 ##### Usage:
 

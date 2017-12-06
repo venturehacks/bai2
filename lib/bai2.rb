@@ -13,7 +13,8 @@ module Bai2
 
     DEFAULT_OPTIONS = {
       account_control_ignores_summary_amounts: false,
-      num_account_summary_continuation_records: 0
+      num_account_summary_continuation_records: 0,
+      continuations_slash_delimit_end_of_line_only: false,
     }.freeze
 
     # Parse a file on disk:
@@ -33,7 +34,7 @@ module Bai2
       @raw = raw
       @groups = []
       @options = DEFAULT_OPTIONS.merge(options)
-      parse(raw)
+      parse(raw, options)
     end
 
     # This is the raw data. Probably not super important.
@@ -62,9 +63,9 @@ module Bai2
     # This delegates most of the work to Bai2::Parser to build the ParseNode
     # tree.
     #
-    def parse(data)
+    def parse(data, options)
 
-      root = Parser.parse(data)
+      root = Parser.parse(data, options)
 
       # parse the file node; will descend tree and parse children
       parse_file_node(root)

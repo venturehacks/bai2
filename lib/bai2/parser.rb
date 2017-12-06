@@ -26,10 +26,10 @@ module Bai2
       # 1. Build a tree
       # 2. Parse the tree
       #
-      def parse(data)
+      def parse(data, options)
 
         # split records, handle stupid DOS-format files, instantiate records
-        records = data.split("\n").map(&:strip).map {|l| Record.new(l) }
+        records = data.split("\n").map(&:strip).map {|l| Record.new(l, options: options) }
 
         # merge continuations
         records = merge_continuations(records)

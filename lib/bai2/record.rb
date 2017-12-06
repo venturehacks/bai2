@@ -112,11 +112,18 @@ module Bai2
     }
 
 
-    def initialize(line, physical_record_count = 1)
+    def initialize(line, physical_record_count = 1, options: {})
       @code = RECORD_CODES[line[0..1]]
       @physical_record_count = physical_record_count
       # clean / delimiter
-      @raw = line.sub(/,\/.+$/, '').sub(/\/$/, '')
+      @raw = if options[:continuations_slash_delimit_end_of_line_only]
+              # Continuation records for transaction details extend the text fields
+              # and they may begin with 88,/ but should include the rest of the line.
+              # A proper fix would involve each continuation record knowing what field it was extending.
+              line.sub(/\/$/, '')
+             else
+              line.sub(/,\/.+$/, '').sub(/\/$/, '')
+             end
     end
 
     attr_reader :code, :raw, :physical_record_count
