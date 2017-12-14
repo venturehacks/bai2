@@ -11,8 +11,10 @@ class Bai2Test < Minitest::Test
 
     @eod = Bai2::BaiFile.parse(File.expand_path('../../data/eod.bai2', __FILE__))
     @eod_no_as_of_time = Bai2::BaiFile.parse(File.expand_path('../../data/eod_without_as_of_time.bai2', __FILE__))
+    @eod_with_slash_in_continuation = Bai2::BaiFile.parse(File.expand_path('../../data/eod_with_slash_in_text.bai2', __FILE__),
+                                                          continuations_slash_delimit_end_of_line_only: true)
 
-    @all_files = [@daily, @daily_with_summary, @eod, @eod_no_as_of_time]
+    @all_files = [@daily, @daily_with_summary, @eod, @eod_no_as_of_time, @eod_with_slash_in_continuation]
   end
 
   def test_parsing
@@ -73,5 +75,4 @@ class Bai2Test < Minitest::Test
       Bai2::BaiFile.parse(File.expand_path('../../data/invalid_checksum_eod.bai2', __FILE__))
     end
   end
-
 end
