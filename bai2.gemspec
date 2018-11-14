@@ -5,7 +5,7 @@ require 'bai2/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'bai2'
-  spec.version       = Bai2::VERSION
+  spec.version       = '2.0.1'
   spec.authors       = ['Kenneth Ballenegger']
   spec.email         = ['kenneth@ballenegger.com']
   spec.summary       = %q{Parse BAI2 files.}
