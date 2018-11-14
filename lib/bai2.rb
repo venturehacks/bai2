@@ -1,4 +1,3 @@
-require 'bai2/version'
 require 'bai2/record'
 require 'bai2/parser'
 require 'bai2/integrity'
