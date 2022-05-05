@@ -6,8 +6,7 @@ class Bai2Test < Minitest::Test
 
   def setup
     @daily = Bai2::BaiFile.parse(File.expand_path('../../data/daily.bai2', __FILE__))
-    @daily_with_summary = Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_summary.bai2', __FILE__),
-                                              num_account_summary_continuation_records: 3)
+    @daily_with_summary = Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_summary.bai2', __FILE__))
 
     @eod = Bai2::BaiFile.parse(File.expand_path('../../data/eod.bai2', __FILE__))
     @eod_no_as_of_time = Bai2::BaiFile.parse(File.expand_path('../../data/eod_without_as_of_time.bai2', __FILE__))
@@ -67,8 +66,8 @@ class Bai2Test < Minitest::Test
 
   def test_integrity
     assert_raises Bai2::BaiFile::IntegrityError do
-      # Calling without the options: num_account_summary_continuation_records => 3 should raise an error
-      Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_summary.bai2', __FILE__))
+      # An invalid amount of records should raise an error
+      Bai2::BaiFile.parse(File.expand_path('../../data/daily_with_missing_continuation.bai2', __FILE__))
     end
     assert_raises Bai2::BaiFile::IntegrityError do
       # An invalid amount checksum should raise an error
