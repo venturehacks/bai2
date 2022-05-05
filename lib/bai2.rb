@@ -12,7 +12,6 @@ module Bai2
 
     DEFAULT_OPTIONS = {
       account_control_ignores_summary_amounts: false,
-      num_account_summary_continuation_records: 0,
       continuations_slash_delimit_end_of_line_only: false,
     }.freeze
 
@@ -138,6 +137,7 @@ module Bai2
 
       def initialize
         @transactions = []
+        @num_continuation_records = 0
       end
 
       attr_reader :transactions

@@ -126,7 +126,8 @@ module Bai2
         # Account for the account header and the account trailer records
         # and any additional summary records (Some banks use continuation records
         # for account summaries, others put the summary data on the same row as the header)
-        additional_records = 2 + options[:num_account_summary_continuation_records]
+        trailer_records = 1
+        additional_records = trailer_records + @header.physical_record_count
         actual_num_records = records + additional_records
 
         unless expectation[:records] == actual_num_records
