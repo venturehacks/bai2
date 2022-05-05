@@ -137,7 +137,6 @@ module Bai2
 
       def initialize
         @transactions = []
-        @num_continuation_records = 0
       end
 
       attr_reader :transactions

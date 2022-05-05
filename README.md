@@ -91,8 +91,7 @@ This allows continuation records to begin with `88,\` and still have the text in
 
 ```ruby
 Bai2::BaiFile.new(string_data,
-                  account_control_ignores_summary_amounts: true,
-                  num_account_summary_continuation_records: 3)
+                  account_control_ignores_summary_amounts: true)
 ```
 
 
